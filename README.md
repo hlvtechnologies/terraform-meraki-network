@@ -6,7 +6,7 @@ OpenTofu/Terraform module that creates a [Cisco Meraki network](https://develope
 
 ```hcl
 module "meraki_network_somewhere_usa" {
-  source  = "hlvtechnologies/meraki-network"
+  source  = "hlvtechnologies/network"
   version = "~> 0.3"
 
   organization_id = "123456"
