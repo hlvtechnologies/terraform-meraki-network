@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.0](https://github.com/hlvtechnologies/terraform-meraki-network/compare/v0.2.0...v0.3.0) (2026-03-20)
+
+
+### Features
+
+* add switch stacks ([#7](https://github.com/hlvtechnologies/terraform-meraki-network/issues/7)) ([f9088f9](https://github.com/hlvtechnologies/terraform-meraki-network/commit/f9088f94a7ac8828b150cc346d76b7bcc423ee33))
+
 ## [0.2.0](https://github.com/hlvtechnologies/terraform-meraki-network/compare/v0.1.1...v0.2.0) (2026-03-20)
 
 
