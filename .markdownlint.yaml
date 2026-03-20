@@ -1,0 +1,17 @@
+---
+default: true
+
+# Exceptions for terraform-docs generated content (README.md)
+# terraform-docs outputs sections without an h1, uses HTML for anchors/formatting,
+# and produces tables that don't align with the "aligned" style
+MD041: false
+MD033:
+  allowed_elements:
+    - a
+    - br
+    - pre
+  table_allowed_elements:
+    - a
+    - br
+    - pre
+MD060: false

@@ -1,0 +1,90 @@
+---
+name: Release Please
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+on:  # yamllint disable-line rule:truthy
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
+jobs:
+  release-please:
+    name: Release Please
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Release Please
+        id: release_please
+        uses: googleapis/release-please-action@v4
+        with:
+          # Use a PAT (e.g. secrets.RELEASE_PLEASE_TOKEN) so release:published and
+          # other workflows can run when needed. GITHUB_TOKEN does not trigger them.
+          token: ${{ secrets.RELEASE_PLEASE_TOKEN }}
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
+
+      - name: Job summary
+        if: always()
+        env:
+          RELEASE_BODY: ${{ steps.release_please.outputs.body }}
+        run: |
+          {
+            RUN_URL="${{ github.server_url }}/${{ github.repository }}"
+            RUN_URL="${RUN_URL}/actions/runs/${{ github.run_id }}"
+            echo "## 🚀 Release Please"
+            echo
+            echo "### 📋 Run context"
+            echo
+            echo "| | |"
+            echo "|--|--|"
+            echo "| Ref | \`${{ github.ref }}\` |"
+            echo "| SHA | \`${{ github.sha }}\` |"
+            echo "| Workflow run | [${{ github.run_id }}](${RUN_URL}) |"
+            echo "| Config | [release-please-config.json](release-please-config.json) |"
+            echo "| Manifest | [.release-please-manifest.json](.release-please-manifest.json) |"
+            echo
+            echo "### 📤 Action outputs (root component)"
+            echo
+            echo "| Output | Value |"
+            echo "|--------|-------|"
+            echo "| \`releases_created\` | \`${{ steps.release_please.outputs.releases_created }}\` |"
+            echo "| \`prs_created\` | \`${{ steps.release_please.outputs.prs_created }}\` |"
+            echo "| \`release_created\` | \`${{ steps.release_please.outputs.release_created }}\` |"
+            echo "| \`paths_released\` | \`${{ steps.release_please.outputs.paths_released }}\` |"
+            echo "| \`version\` | \`${{ steps.release_please.outputs.version }}\` |"
+            echo "| \`tag_name\` | \`${{ steps.release_please.outputs.tag_name }}\` |"
+            echo "| \`sha\` | \`${{ steps.release_please.outputs.sha }}\` |"
+            echo "| \`html_url\` | \`${{ steps.release_please.outputs.html_url }}\` |"
+            maj="${{ steps.release_please.outputs.major }}"
+            min="${{ steps.release_please.outputs.minor }}"
+            pat="${{ steps.release_please.outputs.patch }}"
+            echo "| \`major\` / \`minor\` / \`patch\` | \`${maj}\` / \`${min}\` / \`${pat}\` |"
+            echo
+            echo "### 💡 Notes"
+            echo
+            echo "- Set \`RELEASE_PLEASE_TOKEN\` (PAT). See [TEMPLATE.md](TEMPLATE.md)."
+            echo "- When \`prs_created\` is \`true\`, open or refresh the **release PR** and merge to publish."
+            echo "- \`release_created\` **true**: GitHub Release published — see \`html_url\`, \`tag_name\`."
+            echo
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          if [[ -n "${RELEASE_BODY:-}" ]]; then
+            {
+              echo "### 📝 Release notes preview (\`body\` output)"
+              echo
+              echo '```markdown'
+              printf '%s\n' "${RELEASE_BODY}"
+              echo '```'
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi

@@ -1,0 +1,34 @@
+---
+name: Feature request
+description: Suggest an enhancement or new capability for this module
+labels:
+  - enhancement
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Share the problem you are solving so maintainers can weigh scope and compatibility.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or use case
+      description: What are you trying to achieve with Meraki / Terraform that this module does not support today?
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed change
+      description: Inputs, resources, or behavior you would like. Links to Meraki API docs help.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Workarounds or other approaches you evaluated (optional).
+    validations:
+      required: false

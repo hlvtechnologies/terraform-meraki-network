@@ -1,0 +1,154 @@
+---
+name: OpenTofu CI
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+on:  # yamllint disable-line rule:truthy
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  pre-commit:
+    name: Pre-commit
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+      - name: Setup Python
+        uses: actions/setup-python@v6
+      - name: Setup TFLint
+        uses: terraform-linters/setup-tflint@v6
+      - name: Setup Terraform-Docs
+        uses: jaxxstorm/action-install-gh-release@v2.1.0
+        with:
+          repo: terraform-docs/terraform-docs
+          tag: v0.21.0
+      - name: Cache pre-commit
+        uses: actions/cache@v5
+        with:
+          path: ~/.cache/pre-commit
+          key: pre-commit-${{ runner.os }}-${{ hashFiles('.pre-commit-config.yaml') }}
+          restore-keys: |
+            pre-commit-${{ runner.os }}-
+      - name: Install pre-commit
+        run: pip install pre-commit
+      - name: Setup OpenTofu
+        uses: opentofu/setup-opentofu@v2
+        with:
+          tofu_version_file: .opentofu-version
+          tofu_wrapper: false
+      - name: Run pre-commit
+        id: pre_commit
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "${RUNNER_TEMP}/ci-summary"
+          set -o pipefail
+          set +e
+          pre-commit run --all-files 2>&1 | tee "${RUNNER_TEMP}/ci-summary/pre-commit.log"
+          ec=${PIPESTATUS[0]}
+          set -e
+          echo "${ec}" > "${RUNNER_TEMP}/ci-summary/pre-commit.exit"
+          exit "${ec}"
+      - name: Job summary
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          SUMMARY_DIR="${RUNNER_TEMP}/ci-summary"
+          EXIT_FILE="${SUMMARY_DIR}/pre-commit.exit"
+          LOG_FILE="${SUMMARY_DIR}/pre-commit.log"
+          if [[ -f "${EXIT_FILE}" ]]; then
+            PRE_COMMIT_EXIT="$(tr -d ' \n\r' < "${EXIT_FILE}")"
+          else
+            PRE_COMMIT_EXIT=""
+          fi
+
+          {
+            RUN_URL="${{ github.server_url }}/${{ github.repository }}"
+            RUN_URL="${RUN_URL}/actions/runs/${{ github.run_id }}"
+            echo "## 🔧 OpenTofu CI: Pre-commit"
+            echo
+            echo "### 📋 Run context"
+            echo
+            echo "| | |"
+            echo "|--|--|"
+            echo "| Event | \`${{ github.event_name }}\` |"
+            echo "| Ref | \`${{ github.ref }}\` |"
+            echo "| SHA | \`${{ github.sha }}\` |"
+            echo "| Workflow run | [${{ github.run_id }}](${RUN_URL}) |"
+            echo
+            echo "### 🛠️ Toolchain (this runner)"
+            echo
+            echo "| Tool | Version / source |"
+            echo "|------|------------------|"
+            if command -v tofu >/dev/null 2>&1; then
+              printf '| OpenTofu | `%s` |\n' "$(tofu version 2>/dev/null | head -n1 | tr -d '\r')"
+            fi
+            if command -v python3 >/dev/null 2>&1; then
+              printf '| Python | `%s` |\n' "$(python3 --version 2>&1 | tr -d '\r')"
+            fi
+            if command -v pre-commit >/dev/null 2>&1; then
+              printf '| pre-commit | `%s` |\n' "$(pre-commit --version 2>&1 | tr -d '\r')"
+            fi
+            if command -v terraform-docs >/dev/null 2>&1; then
+              printf '| terraform-docs | `%s` |\n' "$(terraform-docs version 2>&1 | tr -d '\r' | head -n1)"
+            fi
+            if command -v tflint >/dev/null 2>&1; then
+              printf '| tflint | `%s` |\n' "$(tflint --version 2>&1 | tr -d '\r' | head -n1)"
+            fi
+            if [[ -f .opentofu-version ]]; then
+              printf '| Pinned OpenTofu (file) | `%s` |\n' "$(tr -d '\n\r' < .opentofu-version)"
+            fi
+            echo
+            echo "### 🧪 Pre-commit result"
+            echo
+            if [[ "${PRE_COMMIT_EXIT}" == "0" ]]; then
+              echo "Status: **✅ passed** (exit 0)."
+            elif [[ -n "${PRE_COMMIT_EXIT}" ]]; then
+              echo "Status: **❌ failed** (exit ${PRE_COMMIT_EXIT})."
+            else
+              echo "Status: **❓ unknown** (no exit file — see “Run pre-commit” step log)."
+            fi
+            echo
+            echo "Command: \`pre-commit run --all-files\` — hooks from "
+            echo "[\`.pre-commit-config.yaml\`](.pre-commit-config.yaml) (\`commit-msg\` not run in CI)."
+            echo
+            if [[ -f "${LOG_FILE}" ]]; then
+              echo "<details>"
+              echo "<summary>📜 Full pre-commit output</summary>"
+              echo
+              echo '```text'
+              # Cap size so the summary stays well under GitHub limits (~1 MiB)
+              if [[ "$(wc -c < "${LOG_FILE}")" -gt 61440 ]]; then
+                head -n 400 "${LOG_FILE}"
+                echo ""
+                echo "… truncated (first 400 lines; full output is in the “Run pre-commit” step log)"
+              else
+                cat "${LOG_FILE}"
+              fi
+              echo '```'
+              echo
+              echo "</details>"
+            else
+              echo "_No pre-commit log file was written (see the “Run pre-commit” step)._"
+            fi
+            echo
+            echo "### 💻 If checks failed locally"
+            echo
+            echo '```bash'
+            echo "pip install pre-commit"
+            echo "pre-commit install"
+            echo "pre-commit install --hook-type commit-msg"
+            echo "pre-commit run --all-files"
+            echo '```'
+          } >> "${GITHUB_STEP_SUMMARY}"

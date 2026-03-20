@@ -1,0 +1,58 @@
+---
+name: Bug report
+description: Report incorrect behavior, errors, or unexpected plans with this module
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a problem. Please include enough detail to reproduce the issue.
+
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: What went wrong in one or two sentences?
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+      description: Logs, plan output, or error messages (redact secrets and IDs).
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Minimal configuration
+      description: Module `source`, `version` or `ref`, and inputs needed to reproduce (redact sensitive values).
+      render: hcl
+    validations:
+      required: true
+
+  - type: input
+    id: tofu-version
+    attributes:
+      label: OpenTofu or Terraform version
+      description: e.g. `tofu version` or `terraform version` output
+    validations:
+      required: true
+
+  - type: input
+    id: module-version
+    attributes:
+      label: Module version or git ref
+      description: Registry version tag or Git ref you pinned
+    validations:
+      required: false
