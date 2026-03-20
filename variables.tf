@@ -57,3 +57,76 @@ variable "vlans_enabled" {
   description = "Whether to enable VLANs for the network"
   default     = false
 }
+
+variable "webhooks" {
+  type = map(object({
+    name                                 = string
+    url                                  = string
+    payload_template_name                = string
+    payload_template_payload_template_id = string
+    shared_secret                        = string
+  }))
+  default = {}
+}
+
+variable "syslog_servers" {
+  type = map(object({
+    host     = string
+    port     = number
+    protocol = optional(string, "UDP")
+    roles    = list(string)
+  }))
+  default = {}
+}
+
+variable "gateway" {
+  type = object({
+    serial          = string
+    address         = optional(string, "")
+    latitude        = optional(number, 0)
+    longitude       = optional(number, 0)
+    move_map_marker = optional(bool, false)
+    name            = optional(string, "")
+    notes           = optional(string, "")
+    tags            = optional(list(string), ["managed_by_tofu"])
+  })
+  description = "The gateway configuration for the network"
+  default = {
+    serial          = ""
+    address         = ""
+    latitude        = 0
+    longitude       = 0
+    move_map_marker = false
+    name            = ""
+    notes           = ""
+    tags            = ["managed_by_tofu"]
+  }
+}
+
+variable "switches" {
+  type = list(object({
+    serial          = string
+    address         = optional(string, "")
+    latitude        = optional(number, 0)
+    longitude       = optional(number, 0)
+    move_map_marker = optional(bool, false)
+    name            = optional(string, "")
+    notes           = optional(string, "")
+    tags            = optional(list(string), ["managed_by_tofu"])
+  }))
+  description = "The switches configuration for the network"
+  default     = []
+}
+
+variable "access_points" {
+  type = list(object({
+    serial          = string
+    address         = optional(string, "")
+    latitude        = optional(number, 0)
+    longitude       = optional(number, 0)
+    move_map_marker = optional(bool, false)
+    name            = optional(string, "")
+    notes           = optional(string, "")
+    tags            = optional(list(string), ["managed_by_tofu"])
+  }))
+}
