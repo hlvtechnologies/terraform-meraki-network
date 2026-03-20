@@ -65,25 +65,46 @@ resource "meraki_device" "gateway" {
 }
 
 resource "meraki_device" "switch" {
-  count           = length(var.switches) > 0 ? length(var.switches) : 0
-  serial          = lookup(var.switches[count.index], "serial", "")
-  name            = lookup(var.switches[count.index], "name", "")
-  notes           = lookup(var.switches[count.index], "notes", "")
-  address         = lookup(var.switches[count.index], "address", "")
-  lat             = lookup(var.switches[count.index], "latitude", 0)
-  lng             = lookup(var.switches[count.index], "longitude", 0)
-  move_map_marker = lookup(var.switches[count.index], "move_map_marker", true)
-  tags            = lookup(var.switches[count.index], "tags", ["managed_by_tofu"])
+  for_each = var.switches
+
+  serial          = lookup(each.value, "serial", "")
+  name            = each.key
+  notes           = lookup(each.value, "notes", "")
+  address         = lookup(each.value, "address", "")
+  lat             = lookup(each.value, "latitude", 0)
+  lng             = lookup(each.value, "longitude", 0)
+  move_map_marker = lookup(each.value, "move_map_marker", true)
+  tags            = lookup(each.value, "tags", ["managed_by_tofu"])
 }
 
 resource "meraki_device" "access_point" {
-  count           = length(var.access_points) > 0 ? length(var.access_points) : 0
-  serial          = lookup(var.access_points[count.index], "serial", "")
-  name            = lookup(var.access_points[count.index], "name", "")
-  notes           = lookup(var.access_points[count.index], "notes", "")
-  address         = lookup(var.access_points[count.index], "address", "")
-  lat             = lookup(var.access_points[count.index], "latitude", 0)
-  lng             = lookup(var.access_points[count.index], "longitude", 0)
-  move_map_marker = lookup(var.access_points[count.index], "move_map_marker", true)
-  tags            = lookup(var.access_points[count.index], "tags", ["managed_by_tofu"])
+  for_each = var.access_points
+
+  serial          = lookup(each.value, "serial", "")
+  name            = each.key
+  notes           = lookup(each.value, "notes", "")
+  address         = lookup(each.value, "address", "")
+  lat             = lookup(each.value, "latitude", 0)
+  lng             = lookup(each.value, "longitude", 0)
+  move_map_marker = lookup(each.value, "move_map_marker", true)
+  tags            = lookup(each.value, "tags", ["managed_by_tofu"])
+}
+
+resource "meraki_switch_stack" "this" {
+  for_each = var.switch_stacks
+
+  network_id = meraki_network.this.id
+  name       = each.key
+  serials = [
+    for switch_key in each.value.switch_keys : var.switches[switch_key].serial
+  ]
+
+  lifecycle {
+    precondition {
+      condition = alltrue([
+        for switch_key in each.value.switch_keys : contains(keys(var.switches), switch_key)
+      ])
+      error_message = "All switch_stacks switch_keys must reference keys in var.switches."
+    }
+  }
 }

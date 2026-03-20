@@ -104,29 +104,36 @@ variable "gateway" {
 }
 
 variable "switches" {
-  type = list(object({
+  type = map(object({
     serial          = string
     address         = optional(string, "")
     latitude        = optional(number, 0)
     longitude       = optional(number, 0)
     move_map_marker = optional(bool, false)
-    name            = optional(string, "")
     notes           = optional(string, "")
     tags            = optional(list(string), ["managed_by_tofu"])
   }))
-  description = "The switches configuration for the network"
-  default     = []
+  description = "Switches keyed by device name"
+  default     = {}
 }
 
 variable "access_points" {
-  type = list(object({
+  type = map(object({
     serial          = string
     address         = optional(string, "")
     latitude        = optional(number, 0)
     longitude       = optional(number, 0)
     move_map_marker = optional(bool, false)
-    name            = optional(string, "")
     notes           = optional(string, "")
     tags            = optional(list(string), ["managed_by_tofu"])
   }))
+  description = "Access points keyed by device name"
+  default     = {}
+}
+
+variable "switch_stacks" {
+  type = map(object({
+    switch_keys = list(string)
+  }))
+  default = {}
 }
