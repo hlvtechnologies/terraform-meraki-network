@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.0](https://github.com/hlvtechnologies/terraform-meraki-network/compare/v0.1.1...v0.2.0) (2026-03-20)
+
+
+### Features
+
+* more devices and syslog ([#5](https://github.com/hlvtechnologies/terraform-meraki-network/issues/5)) ([db1f49c](https://github.com/hlvtechnologies/terraform-meraki-network/commit/db1f49c8e6da246375ec64288ac97a01310d4818))
+
 ## [0.1.1](https://github.com/hlvtechnologies/terraform-meraki-network/compare/v0.1.0...v0.1.1) (2026-03-20)
 
 
