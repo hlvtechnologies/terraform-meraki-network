@@ -29,7 +29,7 @@ module "meraki_network_somewhere_usa" {
 
 | Name | Version |
 |------|---------|
-| <a name="provider_meraki"></a> [meraki](#provider\_meraki) | 1.9.0 |
+| <a name="provider_meraki"></a> [meraki](#provider\_meraki) | >= 1.9.0 |
 
 ## Modules
 
