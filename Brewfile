@@ -1,0 +1,6 @@
+brew "pre-commit"
+brew "yamllint"
+brew "tenv"
+brew "terraform-docs"
+brew "tflint"
+brew "python@3.14"

@@ -1,0 +1,76 @@
+---
+name: Semantic PR title
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+on:  # yamllint disable-line rule:truthy
+  pull_request:
+    types:
+      - opened
+      - edited
+      - synchronize
+    branches:
+      - main
+
+permissions:
+  pull-requests: read
+  statuses: write
+
+jobs:
+  main:
+    name: Validate PR title
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate Conventional Commit title
+        id: semantic
+        uses: amannn/action-semantic-pull-request@v6
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          ignoreLabels: |
+            autorelease: pending
+            autorelease: tagged
+
+      - name: Job summary
+        if: always()
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          PR_HEAD: ${{ github.event.pull_request.head.ref }}
+          PR_BASE: ${{ github.event.pull_request.base.ref }}
+        run: |
+          {
+            echo "## 🏷️ Semantic PR title"
+            echo
+            echo "### 🔀 Pull request"
+            echo
+            echo "- **🔢 Number:** #${PR_NUMBER}"
+            echo "- **🔗 URL:** ${PR_URL}"
+            echo "- **🌿 Branches:** \`${PR_HEAD}\` → \`${PR_BASE}\`"
+            echo
+            echo "**✏️ Title:**"
+            echo
+            echo '```text'
+            printf '%s\n' "${PR_TITLE}"
+            echo '```'
+            echo
+            echo "### ⚖️ Validation result"
+            echo
+            if [[ "${{ steps.semantic.outcome }}" == "success" ]]; then
+              echo "Status: **🎉 passed** — title matches"
+              echo "[Conventional Commits](https://www.conventionalcommits.org/) (or ignored label)."
+            elif [[ "${{ steps.semantic.outcome }}" == "failure" ]]; then
+              echo "Status: **🚫 failed** — use a conventional title"
+              echo "(e.g. \`feat:\`, \`fix:\`, \`docs:\`, \`chore:\`)."
+            else
+              echo "Status: **❓ ${{ steps.semantic.outcome }}** — see **Validate Conventional Commit title** log."
+            fi
+            echo
+            echo "### 🏷️ Ignored labels"
+            echo
+            echo "Labels \`autorelease: pending\` and \`autorelease: tagged\` skip this check"
+            echo "(Release Please release PRs)."
+          } >> "$GITHUB_STEP_SUMMARY"
