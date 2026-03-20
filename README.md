@@ -1,12 +1,12 @@
-# 📦 terraform-meraki-network
+# 📦 Meraki Network Tofu Module
 
-OpenTofu/Terraform module that creates a [Cisco Meraki network](https://developer.cisco.com/meraki/api-v1/) resource.
+OpenTofu/Terraform module that creates a [Cisco Meraki network](https://developer.cisco.com/meraki/api-v1/) resource and attaches all of the trimmings.
 
 ## 🚀 Usage
 
 ```hcl
 module "meraki_network_somewhere_usa" {
-  source  = "github.com/hlvtechnologies/terraform-meraki-network"
+  source  = "hlvtechnologies/meraki-network"
   version = "~> 0.1"
 
   organization_id = "123456"
@@ -16,8 +16,6 @@ module "meraki_network_somewhere_usa" {
   syslog_servers  = []
 }
 ```
-
-Replace `hlvtechnologies/terraform-meraki-network` with your registry namespace or Git source. When publishing to the Terraform Registry, pin `version` to a release (for example `~> 0.1`); for raw Git sources, use `?ref=` on the `source` URL instead of `version`.
 
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
